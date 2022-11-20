@@ -3,7 +3,6 @@ def pwd-short [] {
 }
 # Nushell Environment Config File
 
-
 def bright-cyan [] {
   each { |it| $"(ansi -e '96m')($it)(ansi reset)" }
 }
@@ -259,11 +258,11 @@ let-env PROMPT_MULTILINE_INDICATOR = { "::: " }
 let-env ENV_CONVERSIONS = {
   "PATH": {
     from_string: { |s| $s | split row (char esep) }
-    to_string: { |v| $v | path expand | str collect (char esep) }
+    to_string: { |v| $v | path expand | str join (char esep) }
   }
   "Path": {
     from_string: { |s| $s | split row (char esep) }
-    to_string: { |v| $v | path expand | str collect (char esep) }
+    to_string: { |v| $v | path expand | str join (char esep) }
   }
 }
 
@@ -284,10 +283,15 @@ let-env NU_PLUGIN_DIRS = [
 # To add entries to PATH (on Windows you might use Path), you can use the following pattern:
 let-env PATH = ($env.PATH | split row (char esep) | prepend '~/.cargo/bin/')
 
+# let-env CARGO_TARGET_DIR = ('~/dev/rust/cargo-targets' | path expand)
 
 def la [path?: string = ""] {
-  ls -la $path | sort-by type | select mode name size modified
+  let res = (ls -la $path)
+  if not ($res | is-empty) {
+    ls -la $path | sort-by type | select mode name size modified
+  }
 }
 
 alias vim = nvim
 alias vimdiff = nvim -d
+alias top = btm

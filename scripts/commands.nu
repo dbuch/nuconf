@@ -1,3 +1,5 @@
+#!/usr/bin/env nu
+
 def "cargo targets" [type: string] {
   let result = do -i { ^cargo metadata --format-version=1 --offline --no-deps | complete }
   if $result.exit_code != 0 {
@@ -78,7 +80,7 @@ export def repo-structured [] {
   let tracking_upstream_branch = (if $in_git_repo {
     $status
     | where ($it | str starts-with '# branch.upstream')
-    | str collect
+    | str join
     | is-empty
     | nope
   } else {
@@ -88,7 +90,7 @@ export def repo-structured [] {
   let upstream_exists_on_remote = (if $in_git_repo {
     $status
     | where ($it | str starts-with '# branch.ab')
-    | str collect
+    | str join
     | is-empty
     | nope
   } else {
@@ -125,7 +127,7 @@ export def repo-structured [] {
   let has_staging_or_worktree_changes = (if $in_git_repo {
     $status
     | where ($it | str starts-with '1') || ($it | str starts-with '2')
-    | str collect
+    | str join
     | is-empty
     | nope
   } else {
@@ -135,7 +137,7 @@ export def repo-structured [] {
   let has_untracked_files = (if $in_git_repo {
     $status
     | where ($it | str starts-with '?')
-    | str collect
+    | str join
     | is-empty
     | nope
   } else {
@@ -145,7 +147,7 @@ export def repo-structured [] {
   let has_unresolved_merge_conflicts = (if $in_git_repo {
     $status
     | where ($it | str starts-with 'u')
-    | str collect
+    | str join
     | is-empty
     | nope
   } else {
@@ -236,4 +238,8 @@ export def repo-structured [] {
     worktree_deleted_count: $worktree_deleted_count,
     merge_conflict_count: $merge_conflict_count
   }
+}
+
+export def look_reverse [file: string] {
+  $env.PWD | path split |  each -n { |it| ( $env.PWD | path split | range 0..($it.index) | path join $file)} | reverse | where ($it | path exists)
 }

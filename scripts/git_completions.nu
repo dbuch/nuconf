@@ -2,6 +2,19 @@ def "nu-complete git branches" [] {
   ^git branch | lines | each { |line| $line | str replace '\* ' "" | str trim }
 }
 
+def parse_git_status_short [] {
+  let file_status = ($in | parse -r '(?P<mode>..) (?P<file>[^\s]+)')
+
+  let staged = ($file_status | get mode | first | str substring '0,1' | str trim)
+  let unstaged = ($file_status | get mode | first | str substring '1,2' | str trim)
+
+  { staged: $staged, unstaged: $unstaged, file: ($file_status.file | first) }
+}
+
+def "nu-complete git add" [] {
+  ^git status -s | lines | each { |line| $line | parse_git_status_short } | where unstaged != "" | get file
+}
+
 def "nu-complete git remotes" [] {
   ^git remote | lines | each { |line| $line | str trim }
 }
@@ -259,3 +272,24 @@ export extern "git switch" [
   --track(-t)                                     # set "upstream" configuration
 ]
 
+export extern "git add" [
+  --dry-run(-n)		# dry run
+	--verbose(-v)		# be verbose
+	--interactive(-i)		# interactive picking
+	--patch(-p)		# select hunks interactively
+	--edit(-e)		# edit current diff and apply
+	--force(-f)		# allow adding otherwise ignored files
+	--update(-u)		# update tracked files
+	--renormalize		# renormalize EOL of tracked files (implies -u)
+	--intent-to-add(-N)		# record only the fact that the path will be added later
+	--all(-A)		# add changes from all tracked and untracked files
+	--ignore-removal		# ignore paths removed in the working tree (same as --no-all)
+	--refresh		# don't add, only refresh the index
+	--ignore-errors		# just skip files which cannot be added because of errors
+	--ignore-missing		# check if - even missing - files are ignored in dry run
+	--sparse		# allow updating entries outside of the sparse-checkout cone
+	--chmod		# (+|-)x        override the executable bit of the listed files
+	--pathspec-from-file		# read pathspec from file
+	--pathspec-file-nul		# with --pathspec-from-file, pathspec elements are separated with NUL character
+  ...args: string@"nu-complete git add",
+]

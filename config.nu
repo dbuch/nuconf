@@ -1,6 +1,6 @@
 use commands.nu *
-use cargo_completions.nu *
-use git_completions.nu *
+# use cargo_completions.nu *
+# use git_completions.nu *
 
 let dark_theme = {
     # color for nushell primitives
@@ -53,44 +53,62 @@ let dark_theme = {
     shape_nothing: light_cyan
 }
 
+# External completer example
+let carapace_completer = {|spans| 
+    carapace $spans.0 nushell $spans | from json
+}
+
 # The default config record. This is where much of your global configuration is setup.
 let-env config = {
-  external_completer: $nothing # check 'carapace_completer' above to as example
-  filesize_metric: false
-  table_mode: compact # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
-  use_ls_colors: true
-  rm_always_trash: false
+  ls: {
+    use_ls_colors: true # use the LS_COLORS environment variable to colorize output
+    clickable_links: true # enable or disable clickable links. Your terminal has to support links.
+  }
+  rm: {
+    always_trash: false # always act as if -t was given. Can be overridden with -p
+  }
+  cd: {
+    abbreviations: false # allows `cd s/o/f` to expand to `cd some/other/folder`
+  }
+  table: {
+    mode: compact # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
+    index_mode: auto # "always" show indexes, "never" show indexes, "auto" = show indexes when a table has "index" column
+    trim: {
+      methodology: wrapping # wrapping or truncating
+      wrapping_try_keep_words: true # A strategy used by the 'wrapping' methodology
+      truncating_suffix: "..." # A suffix used by the 'truncating' methodology
+    }
+  }
+  history: {
+    max_size: 10000 # Session has to be reloaded for this to take effect
+    sync_on_enter: true # Enable to share history between multiple sessions, else you have to close the session to write history to file
+    file_format: "plaintext" # "sqlite" or "plaintext"
+  }
+  completions: {
+    case_sensitive: false # set to true to enable case-sensitive completions
+    quick: true  # set this to false to prevent auto-selecting completions when only one remains
+    partial: true  # set this to false to prevent partial filling of the prompt
+    algorithm: "prefix"  # prefix or fuzzy
+    external: {
+      enable: true # set to false to prevent nushell looking into $env.PATH to find more suggestions, `false` recommended for WSL users as this look up my be very slow
+      max_results: 100 # setting it lower can improve completion performance at the cost of omitting some options
+      completer: $carapace_completer# check 'carapace_completer' above as an example
+    }
+  }
+  filesize: {
+    metric: true # true => KB, MB, GB (ISO standard), false => KiB, MiB, GiB (Windows standard)
+    format: "auto" # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, zb, zib, auto
+  }
   color_config: $dark_theme   # if you want a light theme, replace `$dark_theme` to `$light_theme`
   use_grid_icons: true
-  footer_mode: "never" # always, never, number_of_rows, auto
-  quick_completions: true  # set this to false to prevent auto-selecting completions when only one remains
-  partial_completions: true  # set this to false to prevent partial filling of the prompt
-  completion_algorithm: "prefix"  # prefix, fuzzy
-  float_precision: 3
-  buffer_editor: "nvim" # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.EDITOR and $env.VISUAL
+  footer_mode: "25" # always, never, number_of_rows, auto
+  float_precision: 2
+  # buffer_editor: "emacs" # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.EDITOR and $env.VISUAL
   use_ansi_coloring: true
-  filesize_format: "auto" # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, zb, zib, auto
   edit_mode: vi # emacs, vi
-  max_history_size: 10000 # Session has to be reloaded for this to take effect
-  sync_history_on_enter: true # Enable to share the history between multiple sessions, else you have to close the session to persist history to file
-  history_file_format: "plaintext" # "sqlite" or "plaintext"
   shell_integration: true # enables terminal markers and a workaround to arrow keys stop working issue
-  disable_table_indexes: true # set to true to remove the index column from tables
-  cd_with_abbreviations: false # set to true to allow you to do things like cd s/o/f and nushell expand it to cd some/other/folder
-  case_sensitive_completions: true # set to true to enable case-sensitive completions
-  enable_external_completion: true # set to false to prevent nushell looking into $env.PATH to find more suggestions, `false` recommended for WSL users as this look up my be very slow
-  max_external_completion_results: 100 # setting it lower can improve completion performance at the cost of omitting some options
-  # A strategy of managing table view in case of limited space.
-  table_trim: {
-    methodology: wrapping, # truncating
-    # A strategy which will be used by 'wrapping' methodology
-    wrapping_try_keep_words: true,
-    # A suffix which will be used with 'truncating' methodology
-    # truncating_suffix: "..."
-  }
   show_banner: false # true or false to enable or disable the banner
-  show_clickable_links_in_ls: true # true or false to enable or disable clickable links in the ls listing. your terminal has to support links.
-
+  render_right_prompt_on_last_line: false # true or false to enable or disable right prompt to be rendered on last line of the prompt.
   hooks: {
     pre_prompt: [{
       let-env GIT_STATUS = repo-structured
@@ -102,6 +120,9 @@ let-env config = {
       PWD: [{|before, after|
         $nothing  # replace with source code to run if the PWD environment is different since the last repl input
       }]
+    }
+    display_output: {
+      if (term size).columns >= 100 { table -e } else { table }
     }
   }
   menus: [
@@ -175,9 +196,6 @@ let-env config = {
             description_text: yellow
         }
       }
-      # Example of extra menus created using a nushell source
-      # Use the source field to create a list of records that populates
-      # the menu
       {
         name: commands_menu
         only_buffer_difference: false
@@ -281,7 +299,7 @@ let-env config = {
       name: history_menu
       modifier: Alt
       keycode: char_r
-      mode: [vi_insert, vi_normal]
+      mode: [vi_normal, vi_insert]
       event: { send: menu name: history_menu }
     }
     {
@@ -303,6 +321,39 @@ let-env config = {
         ]
        }
     }
+    {
+      name: yank
+      modifier: control
+      keycode: char_y
+      mode: emacs
+      event: {
+        until: [
+          {edit: pastecutbufferafter}
+        ]
+      }
+    }
+    {
+      name: unix-line-discard
+      modifier: control
+      keycode: char_u
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {edit: cutfromlinestart}
+        ]
+      }
+    }
+    {
+      name: kill-line
+      modifier: control
+      keycode: char_k
+      mode: [emacs, vi_normal, vi_insert]
+      event: {
+        until: [
+          {edit: cuttolineend}
+        ]
+      }
+    }
     # Keybindings used to trigger the user defined menus
     {
       name: commands_menu
@@ -320,16 +371,16 @@ let-env config = {
     }
     {
       name: vars_menu
-      modifier: control
-      keycode: char_y
-      mode: [vi_normal, vi_insert]
+      modifier: alt
+      keycode: char_o
+      mode: [emacs, vi_normal, vi_insert]
       event: { send: menu name: vars_menu }
     }
     {
       name: commands_with_description
       modifier: control
-      keycode: char_u
-      mode: [vi_normal, vi_insert]
+      keycode: char_s
+      mode: [emacs, vi_normal, vi_insert]
       event: { send: menu name: commands_with_description }
     }
   ]
