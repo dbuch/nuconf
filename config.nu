@@ -1,4 +1,4 @@
-use commands.nu *
+use /home/dbuch/.config/nushell/scripts/commands.nu *
 # use cargo_completions.nu *
 # use git_completions.nu *
 
@@ -59,7 +59,7 @@ let carapace_completer = {|spans|
 }
 
 # The default config record. This is where much of your global configuration is setup.
-let-env config = {
+$env.config = {
   ls: {
     use_ls_colors: true # use the LS_COLORS environment variable to colorize output
     clickable_links: true # enable or disable clickable links. Your terminal has to support links.
@@ -79,11 +79,68 @@ let-env config = {
       truncating_suffix: "..." # A suffix used by the 'truncating' methodology
     }
   }
+  explore: {
+    help_banner: true
+    exit_esc: true
+
+    command_bar_text: '#C4C9C6'
+    # command_bar: {fg: '#C4C9C6' bg: '#223311' }
+
+    status_bar_background: {fg: '#1D1F21' bg: '#C4C9C6' }
+    # status_bar_text: {fg: '#C4C9C6' bg: '#223311' }
+
+    highlight: {bg: 'yellow' fg: 'black' }
+
+    status: {
+      # warn: {bg: 'yellow', fg: 'blue'}
+      # error: {bg: 'yellow', fg: 'blue'}
+      # info: {bg: 'yellow', fg: 'blue'}
+    }
+
+    try: {
+      # border_color: 'red'
+      # highlighted_color: 'blue'
+
+      # reactive: false
+    }
+
+    table: {
+      split_line: '#404040'
+
+      cursor: true
+
+      line_index: true
+      line_shift: true
+      line_head_top: true
+      line_head_bottom: true
+
+      show_head: true
+      show_index: true
+
+      # selected_cell: {fg: 'white', bg: '#777777'}
+      # selected_row: {fg: 'yellow', bg: '#C1C2A3'}
+      # selected_column: blue
+
+      # padding_column_right: 2
+      # padding_column_left: 2
+
+      # padding_index_left: 2
+      # padding_index_right: 1
+    }
+
+    config: {
+      cursor_color: {bg: 'yellow' fg: 'black' }
+
+      # border_color: white
+      # list_color: green
+    }
+  }
   history: {
     max_size: 10000 # Session has to be reloaded for this to take effect
     sync_on_enter: true # Enable to share history between multiple sessions, else you have to close the session to write history to file
     file_format: "plaintext" # "sqlite" or "plaintext"
   }
+
   completions: {
     case_sensitive: false # set to true to enable case-sensitive completions
     quick: true  # set this to false to prevent auto-selecting completions when only one remains
@@ -92,28 +149,33 @@ let-env config = {
     external: {
       enable: true # set to false to prevent nushell looking into $env.PATH to find more suggestions, `false` recommended for WSL users as this look up my be very slow
       max_results: 100 # setting it lower can improve completion performance at the cost of omitting some options
-      completer: $carapace_completer# check 'carapace_completer' above as an example
+      completer: $carapace_completer # check 'carapace_completer' above as an example
     }
   }
   filesize: {
     metric: true # true => KB, MB, GB (ISO standard), false => KiB, MiB, GiB (Windows standard)
     format: "auto" # b, kb, kib, mb, mib, gb, gib, tb, tib, pb, pib, eb, eib, zb, zib, auto
   }
+  cursor_shape: {
+    emacs: line # block, underscore, line (line is the default)
+    vi_insert: line # block, underscore, line (block is the default)
+    vi_normal: block # block, underscore, line  (underscore is the default)
+  }
   color_config: $dark_theme   # if you want a light theme, replace `$dark_theme` to `$light_theme`
   use_grid_icons: true
   footer_mode: "25" # always, never, number_of_rows, auto
   float_precision: 2
-  # buffer_editor: "emacs" # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.EDITOR and $env.VISUAL
+  buffer_editor: "nvim" # command that will be used to edit the current line buffer with ctrl+o, if unset fallback to $env.EDITOR and $env.VISUAL
   use_ansi_coloring: true
   edit_mode: vi # emacs, vi
   shell_integration: true # enables terminal markers and a workaround to arrow keys stop working issue
   show_banner: false # true or false to enable or disable the banner
   render_right_prompt_on_last_line: false # true or false to enable or disable right prompt to be rendered on last line of the prompt.
   hooks: {
-    pre_prompt: [{
-      let-env GIT_STATUS = repo-structured
+    pre_prompt: [{||
+      $env.GIT_STATUS = (repo_structured)
     }]
-    pre_execution: [{
+    pre_execution: [{||
       $nothing  # replace with source code to run before the repl input is run
     }]
     env_change: {
@@ -121,7 +183,7 @@ let-env config = {
         $nothing  # replace with source code to run if the PWD environment is different since the last repl input
       }]
     }
-    display_output: {
+    display_output: {||
       if (term size).columns >= 100 { table -e } else { table }
     }
   }
@@ -213,8 +275,8 @@ let-env config = {
         }
         source: { |buffer, position|
             $nu.scope.commands
-            | where command =~ $buffer
-            | each { |it| {value: $it.command description: $it.usage} }
+            | where name =~ $buffer
+            | each { |it| {value: $it.name description: $it.usage} }
         }
       }
       {
@@ -256,8 +318,8 @@ let-env config = {
         }
         source: { |buffer, position|
             $nu.scope.commands
-            | where command =~ $buffer
-            | each { |it| {value: $it.command description: $it.usage} }
+            | where name =~ $buffer
+            | each { |it| {value: $it.name description: $it.usage} }
         }
       }
   ]

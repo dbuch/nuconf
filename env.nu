@@ -1,5 +1,19 @@
+$env.DEBUGINFOD_URLS = "https://debuginfod.archlinux.org/"
+
+$env.NU_LIB_DIRS = [
+    ($nu.config-path | path dirname | path join 'scripts')
+]
+
+use /home/dbuch/.config/nushell/scripts/commands.nu *
+
+# Directories to search for scripts when calling source or use
+#
+# By default, <nushell-config-dir>/scripts is added
+
+#use commands.nu *
+
 def pwd-short [] {
-  $env.PWD | str replace $nu.home-path '~' -s
+  $env.PWD | str replace $nu.home-path '~'
 }
 # Nushell Environment Config File
 
@@ -90,36 +104,36 @@ def unresolved-conflicts [
 }
 
 def repo-styled [] {
-  let status = $env.GIT_STATUS
+  let status = ($env.GIT_STATUS)
 
   let is_local_only = ($status.tracking_upstream_branch != true)
 
   let upstream_deleted = (
-    $status.tracking_upstream_branch &&
+    $status.tracking_upstream_branch and
     $status.upstream_exists_on_remote != true
   )
 
   let is_up_to_date = (
-    $status.upstream_exists_on_remote &&
-    $status.commits_ahead == 0 &&
+    $status.upstream_exists_on_remote and
+    $status.commits_ahead == 0 and
     $status.commits_behind == 0
   )
 
   let is_ahead = (
-    $status.upstream_exists_on_remote &&
-    $status.commits_ahead > 0 &&
+    $status.upstream_exists_on_remote and
+    $status.commits_ahead > 0 and
     $status.commits_behind == 0
   )
 
   let is_behind = (
-    $status.upstream_exists_on_remote &&
-    $status.commits_ahead == 0 &&
+    $status.upstream_exists_on_remote and
+    $status.commits_ahead == 0 and
     $status.commits_behind > 0
   )
 
   let is_ahead_and_behind = (
-    $status.upstream_exists_on_remote &&
-    $status.commits_ahead > 0 &&
+    $status.upstream_exists_on_remote and
+    $status.commits_ahead > 0 and
     $status.commits_behind > 0
   )
 
@@ -127,7 +141,7 @@ def repo-styled [] {
     (if $status.on_named_branch {
       $status.branch_name
     } else {
-      ['(' $status.commit_hash '...)'] | str collect
+      ['(' $status.commit_hash '...)'] | str join
     })
   } else {
     ''
@@ -154,15 +168,15 @@ def repo-styled [] {
   })
 
   let has_staging_changes = (
-    $status.staging_added_count > 0 ||
-    $status.staging_modified_count > 0 ||
+    $status.staging_added_count > 0 or
+    $status.staging_modified_count > 0 or
     $status.staging_deleted_count > 0
   )
 
   let has_worktree_changes = (
-    $status.untracked_count > 0 ||
-    $status.worktree_modified_count > 0 ||
-    $status.worktree_deleted_count > 0 ||
+    $status.untracked_count > 0 or
+    $status.worktree_modified_count > 0 or
+    $status.worktree_deleted_count > 0 or
     $status.merge_conflict_count > 0
   )
 
@@ -186,7 +200,7 @@ def repo-styled [] {
     ''
   })
 
-  let delimiter = (if ($has_staging_changes && $has_worktree_changes) {
+  let delimiter = (if ($has_staging_changes and $has_worktree_changes) {
     ('|' | bright-yellow)
   } else {
     ''
@@ -230,32 +244,32 @@ def create_left_prompt [] {
         $"(ansi green_bold)($env.PWD)"
     }
 
-    $path_segment | str replace $nu.home-path '~' -s
+    $path_segment | str replace $nu.home-path '~'
 }
 
 def create_right_prompt [] {
-    let status = $env.GIT_STATUS
+    let status = (repo_structured)
     if $status.in_git_repo {
-      repo-styled
+      (repo-styled)
     } 
 }
 
 # Use nushell functions to define your right and left prompt
-let-env PROMPT_COMMAND = { create_left_prompt }
-let-env PROMPT_COMMAND_RIGHT = { create_right_prompt }
+$env.PROMPT_COMMAND = {|| create_left_prompt }
+$env.PROMPT_COMMAND_RIGHT = {|| create_right_prompt }
 
 # The prompt indicators are environmental variables that represent
 # the state of the prompt
-let-env PROMPT_INDICATOR = { " ❯ " }
-let-env PROMPT_INDICATOR_VI_INSERT = { " ❯ " }
-let-env PROMPT_INDICATOR_VI_NORMAL = { " ❮ " }
-let-env PROMPT_MULTILINE_INDICATOR = { "::: " }
+$env.PROMPT_INDICATOR = {|| " ❯ " }
+$env.PROMPT_INDICATOR_VI_INSERT = {|| " ❯ " }
+$env.PROMPT_INDICATOR_VI_NORMAL = {|| " ❮ " }
+$env.PROMPT_MULTILINE_INDICATOR = {|| "::: " }
 
 # Specifies how environment variables are:
 # - converted from a string to a value on Nushell startup (from_string)
 # - converted from a value back to a string when running external commands (to_string)
 # Note: The conversions happen *after* config.nu is loaded
-let-env ENV_CONVERSIONS = {
+$env.ENV_CONVERSIONS = {
   "PATH": {
     from_string: { |s| $s | split row (char esep) }
     to_string: { |v| $v | path expand | str join (char esep) }
@@ -266,30 +280,18 @@ let-env ENV_CONVERSIONS = {
   }
 }
 
-# Directories to search for scripts when calling source or use
-#
-# By default, <nushell-config-dir>/scripts is added
-let-env NU_LIB_DIRS = [
-    ($nu.config-path | path dirname | path join 'scripts')
-]
-
-# Directories to search for plugin binaries when calling register
-#
-# By default, <nushell-config-dir>/plugins is added
-let-env NU_PLUGIN_DIRS = [
-    ($nu.config-path | path dirname | path join 'plugins')
-]
+$env.SSH_AUTH_SOCK = ($env.XDG_RUNTIME_DIR | path join 'ssh-agent.socket')
 
 # To add entries to PATH (on Windows you might use Path), you can use the following pattern:
-let-env PATH = ($env.PATH | split row (char esep) | prepend '~/.cargo/bin/')
+$env.PATH = ($env.PATH | split row (char esep) | prepend '~/.cargo/bin/' |
+prepend '~/.local/bin/')
 
 # let-env CARGO_TARGET_DIR = ('~/dev/rust/cargo-targets' | path expand)
 
+$env.MOZ_ENABLE_WAYLAND = 1
+
 def la [path?: string = ""] {
-  let res = (ls -la $path)
-  if not ($res | is-empty) {
-    ls -la $path | sort-by type | select mode name size modified
-  }
+  ls -l $path | sort-by type | select mode name size modified
 }
 
 alias vim = nvim

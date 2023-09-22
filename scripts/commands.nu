@@ -1,7 +1,7 @@
 #!/usr/bin/env nu
 
 def "cargo targets" [type: string] {
-  let result = do -i { ^cargo metadata --format-version=1 --offline --no-deps | complete }
+  let result = (do -i { ^cargo metadata --format-version=1 --offline --no-deps | complete })
   if $result.exit_code != 0 {
     error make -u { msg: "No cargo manifest in current path" }
   }
@@ -36,8 +36,8 @@ export def nope [] {
   each { |it| $it == false }
 }
 
-export def repo-structured [] {
-  let repo_toplevel = (do --ignore-errors { git rev-parse --show-toplevel })
+export def repo_structured [] {
+  let repo_toplevel = (do -i { ^git rev-parse --show-toplevel })
   let in_git_repo = ($repo_toplevel | is-empty | nope)
 
   let status = (if $in_git_repo {
@@ -72,7 +72,7 @@ export def repo-structured [] {
     | split column ' ' col1 col2 full_hash
     | get full_hash
     | first
-    | str substring [0 7]
+    | str substring 0..7
   } else {
     ''
   })
@@ -126,7 +126,7 @@ export def repo-structured [] {
 
   let has_staging_or_worktree_changes = (if $in_git_repo {
     $status
-    | where ($it | str starts-with '1') || ($it | str starts-with '2')
+    | where ($it | str starts-with '1') or ($it | str starts-with '2')
     | str join
     | is-empty
     | nope
@@ -156,7 +156,7 @@ export def repo-structured [] {
 
   let staging_worktree_table = (if $has_staging_or_worktree_changes {
     $status
-    | where ($it | str starts-with '1') || ($it | str starts-with '2')
+    | where ($it | str starts-with '1') or ($it | str starts-with '2')
     | split column ' '
     | get column2
     | split column '' staging worktree --collapse-empty
@@ -241,5 +241,5 @@ export def repo-structured [] {
 }
 
 export def look_reverse [file: string] {
-  $env.PWD | path split |  each -n { |it| ( $env.PWD | path split | range 0..($it.index) | path join $file)} | reverse | where ($it | path exists)
+  $env.PWD | path split |  each { |it| ( $env.PWD | path split | range 0..($it.index) | path join $file)} | reverse | where ($it | path exists)
 }
