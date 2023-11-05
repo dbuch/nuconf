@@ -67,9 +67,9 @@ $env.config = {
   rm: {
     always_trash: false # always act as if -t was given. Can be overridden with -p
   }
-  cd: {
-    abbreviations: false # allows `cd s/o/f` to expand to `cd some/other/folder`
-  }
+  # cd: {
+  #   abbreviations: false # allows `cd s/o/f` to expand to `cd some/other/folder`
+  # }
   table: {
     mode: compact # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
     index_mode: auto # "always" show indexes, "never" show indexes, "auto" = show indexes when a table has "index" column
@@ -176,11 +176,11 @@ $env.config = {
       $env.GIT_STATUS = (repo_structured)
     }]
     pre_execution: [{||
-      $nothing  # replace with source code to run before the repl input is run
+      null # replace with source code to run before the repl input is run
     }]
     env_change: {
       PWD: [{|before, after|
-        $nothing  # replace with source code to run if the PWD environment is different since the last repl input
+        null # replace with source code to run if the PWD environment is different since the last repl input
       }]
     }
     display_output: {||
