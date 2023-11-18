@@ -1,6 +1,6 @@
-use /home/dbuch/.config/nushell/scripts/commands.nu *
-# use cargo_completions.nu *
-# use git_completions.nu *
+source init.nu
+source aliases.nu
+use prompt.nu pre_prompt_hook
 
 let dark_theme = {
     # color for nushell primitives
@@ -8,49 +8,62 @@ let dark_theme = {
     leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
     header: green_bold
     empty: blue
-    bool: white
+    # Closures can be used to choose colors for specific values.
+    # The value (in this case, a bool) is piped into the closure.
+    # eg) {|| if $in { 'light_cyan' } else { 'light_gray' } }
+    bool: light_cyan
     int: white
-    filesize: white
+    filesize: cyan
     duration: white
-    date: white
+    date: purple
     range: white
     float: white
     string: white
     nothing: white
     binary: white
-    cellpath: white
+    cell-path: white
     row_index: green_bold
     record: white
     list: white
     block: white
     hints: dark_gray
-
-    # shapes are used to change the cli syntax highlighting
-    shape_garbage: { fg: "#FFFFFF" bg: "#FF0000" attr: b}
+    search_result: {bg: red fg: white}
+    shape_and: purple_bold
     shape_binary: purple_bold
+    shape_block: blue_bold
     shape_bool: light_cyan
-    shape_int: purple_bold
-    shape_float: purple_bold
-    shape_range: yellow_bold
-    shape_internalcall: cyan_bold
+    shape_closure: green_bold
+    shape_custom: green
+    shape_datetime: cyan_bold
+    shape_directory: cyan
     shape_external: cyan
     shape_externalarg: green_bold
+    shape_filepath: cyan
+    shape_flag: blue_bold
+    shape_float: purple_bold
+    # shapes are used to change the cli syntax highlighting
+    shape_garbage: { fg: white bg: red attr: b}
+    shape_globpattern: cyan_bold
+    shape_int: purple_bold
+    shape_internalcall: cyan_bold
+    shape_keyword: cyan_bold
+    shape_list: cyan_bold
     shape_literal: blue
+    shape_match_pattern: green
+    shape_matching_brackets: { attr: u }
+    shape_nothing: light_cyan
     shape_operator: yellow
+    shape_or: purple_bold
+    shape_pipe: purple_bold
+    shape_range: yellow_bold
+    shape_record: cyan_bold
+    shape_redirection: purple_bold
     shape_signature: green_bold
     shape_string: green
     shape_string_interpolation: cyan_bold
-    shape_datetime: cyan_bold
-    shape_list: cyan_bold
     shape_table: blue_bold
-    shape_record: cyan_bold
-    shape_block: blue_bold
-    shape_filepath: cyan
-    shape_globpattern: cyan_bold
     shape_variable: purple
-    shape_flag: blue_bold
-    shape_custom: green
-    shape_nothing: light_cyan
+    shape_vardecl: purple
 }
 
 # External completer example
@@ -161,7 +174,7 @@ $env.config = {
     vi_insert: line # block, underscore, line (block is the default)
     vi_normal: block # block, underscore, line  (underscore is the default)
   }
-  color_config: $dark_theme   # if you want a light theme, replace `$dark_theme` to `$light_theme`
+  color_config: (source theme.nu) # if you want a light theme, replace `$dark_theme` to `$light_theme`
   use_grid_icons: true
   footer_mode: "25" # always, never, number_of_rows, auto
   float_precision: 2
@@ -172,9 +185,9 @@ $env.config = {
   show_banner: false # true or false to enable or disable the banner
   render_right_prompt_on_last_line: false # true or false to enable or disable right prompt to be rendered on last line of the prompt.
   hooks: {
-    pre_prompt: [{||
-      $env.GIT_STATUS = (repo_structured)
-    }]
+    pre_prompt: [
+      (pre_prompt_hook)
+    ]
     pre_execution: [{||
       null # replace with source code to run before the repl input is run
     }]
@@ -447,4 +460,3 @@ $env.config = {
     }
   ]
 }
-

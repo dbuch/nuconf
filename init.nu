@@ -1,18 +1,23 @@
-# ~/.config/nushell/init.nu
-#
-# Init module that exports commands and environment variables wanted at startup
+use prompt.nu create_left_prompt
+use prompt.nu create_right_prompt
 
-# commands
-export def egd [...rest] {
-    with-env [GIT_EXTERNAL_DIFF 'difft'] { git diff $rest }
-}
+# Use nushell functions to define your right and left prompt
+$env.PROMPT_COMMAND = {|| create_left_prompt }
+$env.PROMPT_COMMAND_RIGHT = {|| create_right_prompt }
 
-# we need to export the env we create witk load-env
-# because we are `use`-ing here and not `source`-ing this file
+# The prompt indicators are environmental variables that represent
+# the state of the prompt
+$env.PROMPT_INDICATOR = {|| " ❯ " }
+$env.PROMPT_INDICATOR_VI_INSERT = {|| " ❯ " }
+$env.PROMPT_INDICATOR_VI_NORMAL = {|| " ❮ " }
+$env.PROMPT_MULTILINE_INDICATOR = {|| "::: " }
+
 export-env {
     load-env {
         BROWSER: "firefox"
+        DEBUGINFOD_URLS: "https://debuginfod.archlinux.org/"
         CARGO_TARGET_DIR: "~/.cargo/target"
+        MOZ_ENABLE_WAYLAND: 1
         EDITOR: "nvim"
         VISUAL: "nvim"
         PAGER: "less"
@@ -21,3 +26,7 @@ export-env {
         SHOW_USER: true
     }
 }
+
+# export def la [path?: string = ""] {
+#   ls -l $path | sort-by type | select mode name size modified
+# }
