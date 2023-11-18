@@ -1,70 +1,7 @@
 source init.nu
 source aliases.nu
-use prompt.nu pre_prompt_hook
 
-let dark_theme = {
-    # color for nushell primitives
-    separator: white
-    leading_trailing_space_bg: { attr: n } # no fg, no bg, attr none effectively turns this off
-    header: green_bold
-    empty: blue
-    # Closures can be used to choose colors for specific values.
-    # The value (in this case, a bool) is piped into the closure.
-    # eg) {|| if $in { 'light_cyan' } else { 'light_gray' } }
-    bool: light_cyan
-    int: white
-    filesize: cyan
-    duration: white
-    date: purple
-    range: white
-    float: white
-    string: white
-    nothing: white
-    binary: white
-    cell-path: white
-    row_index: green_bold
-    record: white
-    list: white
-    block: white
-    hints: dark_gray
-    search_result: {bg: red fg: white}
-    shape_and: purple_bold
-    shape_binary: purple_bold
-    shape_block: blue_bold
-    shape_bool: light_cyan
-    shape_closure: green_bold
-    shape_custom: green
-    shape_datetime: cyan_bold
-    shape_directory: cyan
-    shape_external: cyan
-    shape_externalarg: green_bold
-    shape_filepath: cyan
-    shape_flag: blue_bold
-    shape_float: purple_bold
-    # shapes are used to change the cli syntax highlighting
-    shape_garbage: { fg: white bg: red attr: b}
-    shape_globpattern: cyan_bold
-    shape_int: purple_bold
-    shape_internalcall: cyan_bold
-    shape_keyword: cyan_bold
-    shape_list: cyan_bold
-    shape_literal: blue
-    shape_match_pattern: green
-    shape_matching_brackets: { attr: u }
-    shape_nothing: light_cyan
-    shape_operator: yellow
-    shape_or: purple_bold
-    shape_pipe: purple_bold
-    shape_range: yellow_bold
-    shape_record: cyan_bold
-    shape_redirection: purple_bold
-    shape_signature: green_bold
-    shape_string: green
-    shape_string_interpolation: cyan_bold
-    shape_table: blue_bold
-    shape_variable: purple
-    shape_vardecl: purple
-}
+use prompt.nu pre_prompt_hook
 
 # External completer example
 let carapace_completer = {|spans| 
@@ -119,26 +56,13 @@ $env.config = {
 
     table: {
       split_line: '#404040'
-
       cursor: true
-
       line_index: true
       line_shift: true
       line_head_top: true
       line_head_bottom: true
-
       show_head: true
       show_index: true
-
-      # selected_cell: {fg: 'white', bg: '#777777'}
-      # selected_row: {fg: 'yellow', bg: '#C1C2A3'}
-      # selected_column: blue
-
-      # padding_column_right: 2
-      # padding_column_left: 2
-
-      # padding_index_left: 2
-      # padding_index_right: 1
     }
 
     config: {
@@ -192,9 +116,8 @@ $env.config = {
       null # replace with source code to run before the repl input is run
     }]
     env_change: {
-      PWD: [{|before, after|
-        null # replace with source code to run if the PWD environment is different since the last repl input
-      }]
+      PWD: [
+      ]
     }
     display_output: {||
       if (term size).columns >= 100 { table -e } else { table }

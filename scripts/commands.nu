@@ -30,6 +30,12 @@ export def "cargo packages" [] {
   }
 }
 
+
+export def nope [] {
+  each { |it| $it == false }
+}
+
+
 export def look_reverse [file: string] {
   $env.PWD | path split |  each { |it| ( $env.PWD | path split | range 0..($it.index) | path join $file)} | reverse | where ($it | path exists)
 }

@@ -21,4 +21,3 @@ $env.NU_LIB_DIRS = [
     ($nu.default-config-dir | path join 'modules')
     ($nu.default-config-dir | path join 'hooks')
 ]
-

@@ -1,16 +1,9 @@
-export def pre_prompt_hook [] {
-  { ||
-    $env.GIT_STATUS = (repo_structured)
-  }
-}
-
 def nope [] {
   each { |it| $it == false }
 }
 
 def repo_structured [] {
-  let repo_toplevel = (do -i { ^git rev-parse --show-toplevel })
-  let in_git_repo = ($repo_toplevel | is-empty | nope)
+  let in_git_repo = (pwd_is_git)
 
   let status = (if $in_git_repo {
     git --no-optional-locks status --porcelain=2 --branch | lines
@@ -193,8 +186,7 @@ def repo_structured [] {
   })
 
   {
-    in_git_repo: $in_git_repo,
-    repo_toplevel: ($repo_toplevel | str trim -r),
+    is_git: $in_git_repo
     on_named_branch: $on_named_branch,
     branch_name: $branch_name,
     commit_hash: $commit_hash,
@@ -306,6 +298,9 @@ def unresolved-conflicts [
 
 def repo-styled [] {
   let status = ($env.GIT_STATUS)
+  if $status.is_git == false {
+    return ''
+  }
 
   let is_local_only = ($status.tracking_upstream_branch != true)
 
@@ -338,7 +333,7 @@ def repo-styled [] {
     $status.commits_behind > 0
   )
 
-  let branch_name = (if $status.in_git_repo {
+  let branch_name = (if $status.is_git {
     (if $status.on_named_branch {
       $status.branch_name
     } else {
@@ -348,7 +343,7 @@ def repo-styled [] {
     ''
   })
 
-  let branch_styled = (if $status.in_git_repo {
+  let branch_styled = (if $status.is_git {
     (if $is_local_only {
       (branch-local-only $branch_name)
     } else if $is_up_to_date {
@@ -411,7 +406,7 @@ def repo-styled [] {
     $'($staging_summary) ($delimiter) ($worktree_summary) ($merge_conflict_summary)' | str trim
   )
 
-  let local_indicator = (if $status.in_git_repo {
+  let local_indicator = (if $status.is_git {
     (if $has_worktree_changes {
       ('!' | red)
     } else if $has_staging_changes {
@@ -430,7 +425,7 @@ def repo-styled [] {
   let left_bracket = ('[' | bright-yellow)
   let right_bracket = (']' | bright-yellow)
 
-  (if $status.in_git_repo {
+  (if $status.is_git {
     $'($left_bracket)($repo_summary)($right_bracket)'
   } else {
     ''
@@ -448,7 +443,18 @@ export def create_left_prompt [] {
 }
 
 export def create_right_prompt [] {
-    if $env.GIT_STATUS.in_git_repo {
-       (repo-styled)
-    } 
+  if $env.GIT_STATUS.is_git {
+    (repo-styled)
+  }
+}
+
+export def pre_prompt_hook [] {
+  { ||
+    $env.GIT_STATUS = (repo_structured)
+  }
+}
+
+def pwd_is_git [] {
+  let repo_toplevel = (do -i { ^git rev-parse --show-toplevel })
+  ($repo_toplevel | is-empty | nope)
 }
