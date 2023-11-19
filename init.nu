@@ -27,6 +27,6 @@ export-env {
     }
 }
 
-# export def la [path?: string = ""] {
-#   ls -l $path | sort-by type | select mode name size modified
-# }
+export def la [path?: string = ""] {
+  ls -l $path | sort-by type | select mode name size modified
+}
