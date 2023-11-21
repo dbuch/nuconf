@@ -24,6 +24,7 @@ export-env {
         SHELL: "nu"
         HOSTNAME:  (hostname | split row '.' | first | str trim)
         SHOW_USER: true
+        SSH_AUTH_SOCK: $"($env.XDG_RUNTIME_DIR)/ssh-agent.socket"
     }
 }
 
