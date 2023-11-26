@@ -1,17 +1,50 @@
 #!/usr/bin/env nu
 
-$env.ENV_CONVERSIONS = {
-    "PATH": {
-        from_string: { |s| $s | split row (char esep) | path expand --no-symlink }
-        to_string: { |v| $v | path expand --no-symlink | str join (char esep) }
-    }
-    "Path": {
-        from_string: { |s| $s | split row (char esep) | path expand --no-symlink }
-        to_string: { |v| $v | path expand --no-symlink | str join (char esep) }
-    }
+export-env {
+  let esep_list_conterter = {
+    from_string = { |s| $s | split row (char esep) }
+    to_string = { |s| $s | str join (char esep) }
+  }
+
+  $env.ENV_CONVERSIONS = {
+      "PATH": {
+          from_string: { |s| $s | split row (char esep) | path expand --no-symlink }
+          to_string: { |v| $v | path expand --no-symlink | str join (char esep) }
+      }
+      "Path": {
+          from_string: { |s| $s | split row (char esep) | path expand --no-symlink }
+          to_string: { |v| $v | path expand --no-symlink | str join (char esep) }
+      }
+  }
+
 }
 
-$env.SSH_AUTH_SOCK = ($env.XDG_RUNTIME_DIR | path join 'ssh-agent.socket')
+export-env { load-env {
+  XDG_DATA_HOME: ($env.HOME | path join ".local" "share")
+  XDG_CONFIG_HOME: ($env.HOME | path join ".config")
+  XDG_STATE_HOME: ($env.HOME | path join ".local" "state")
+  XDG_CACHE_HOME: ($env.HOME | path join ".cache")
+}}
+
+export-env { load-env {
+  BROWSER: "firefox"
+  DEBUGINFOD_URLS: "https://debuginfod.archlinux.org/"
+  CARGO_TARGET_DIR: "~/.cargo/target"
+  MOZ_ENABLE_WAYLAND: 1
+  EDITOR: "nvim"
+  VISUAL: "nvim"
+  PAGER: "less"
+  SHELL: "nu"
+  HOSTNAME:  (hostname | split row '.' | first | str trim)
+  SHOW_USER: true
+  SSH_AUTH_SOCK: $"($env.XDG_RUNTIME_DIR)/ssh-agent.socket"
+}}
+
+
+export-env { load-env {
+  SQLITE_HISTORY: ($env.XDG_CACHE_HOME | path join "sqlite_history")
+}}
+
 $env.PATH = ($env.PATH | split row (char esep) | prepend '~/.cargo/bin/' | prepend '~/.local/bin/')
 
 # Directories to search for scripts when calling source or use
@@ -21,3 +54,5 @@ $env.NU_LIB_DIRS = [
     ($nu.default-config-dir | path join 'modules')
     ($nu.default-config-dir | path join 'hooks')
 ]
+
+$env.SHELL = $nu.current-exe
