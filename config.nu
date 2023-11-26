@@ -20,9 +20,6 @@ $env.config = {
   rm: {
     always_trash: false # always act as if -t was given. Can be overridden with -p
   }
-  # cd: {
-  #   abbreviations: false # allows `cd s/o/f` to expand to `cd some/other/folder`
-  # }
   table: {
     mode: compact # basic, compact, compact_double, light, thin, with_love, rounded, reinforced, heavy, none, other
     index_mode: auto # "always" show indexes, "never" show indexes, "auto" = show indexes when a table has "index" column
@@ -279,21 +276,21 @@ $env.config = {
       name: completion_previous
       modifier: Alt
       keycode: char_h
-      mode: [vi_normal, vi_insert] # Note: You can add the same keybinding to all modes by using a list
+      mode: [vi_normal, vi_insert]
       event: { send: menuprevious }
     }
     {
       name: completion_up
       modifier: Alt
       keycode: char_k
-      mode: [vi_normal, vi_insert] # Note: You can add the same keybinding to all modes by using a list
+      mode: [vi_normal, vi_insert]
       event: { send: menuup }
     }
     {
       name: completion_down
       modifier: Alt
       keycode: char_j
-      mode: [vi_normal, vi_insert] # Note: You can add the same keybinding to all modes by using a list
+      mode: [vi_normal, vi_insert]
       event: { send: menudown }
     }
     {
@@ -321,17 +318,6 @@ $env.config = {
           { edit: undo }
         ]
        }
-    }
-    {
-      name: yank
-      modifier: control
-      keycode: char_y
-      mode: emacs
-      event: {
-        until: [
-          {edit: pastecutbufferafter}
-        ]
-      }
     }
     {
       name: unix-line-discard

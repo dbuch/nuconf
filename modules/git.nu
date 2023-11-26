@@ -18,10 +18,8 @@ def parse_ignored [line: string] {
   ($line | str substring 2.. | split column -c ' ' path)
 }
 
-def parse_porcelain [info_lines: list<string>] {
-  if ($info_lines | is-empty) { return [] }
-
-  let parsed_status = ($info_lines | reduce -f {
+def parse_porcelain [] {
+  let parsed_status = ($in | lines | reduce -f {
     branch: {},
     # 1 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <path>
     OrdinaryChanges: []
@@ -62,40 +60,46 @@ def parse_porcelain [info_lines: list<string>] {
           $status.branch.behind = ($header_entry.value1.0 | into int)
         }
       }
-    } else if ($line | str starts-with '# stash ') {
+    }
+
+    if ($line | str starts-with '# stash ') {
       $status.stash = ($line | str substring 8..9 | into int)
-    } else {
-      # TODO: refactor
-      # put XY's in seperate tables instead
-      # Make decision from first two colmns [1: type, 2: [staging, worktree]]
-      # Staging = [
-      #     { type, ...}    
-      #     ...
-      # ]
-      # Worktree = [
-      #     { type, ...}    
-      #     ...
-      # ]
-      let type = ($line | str substring 0..1)
-      match $type {
-        '1' => { 
-          $status.OrdinaryChanges = ($status.OrdinaryChanges | append (parse_ordinary $line))
-        },
-        '2' => {
-          # 2 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <X><score> <path><sep><origPath>
-          $status.RenameCopiesChanges = ($status.RenameCopiesChanges | append (parse_renameCopies $line))
-        },
-        'u' => {
-          # u <XY> <sub> <m1> <m2> <m3> <mW> <h1> <h2> <h3> <path>
-          $status.UnmergedChanges = ($status.UnmergedChanges | append (parse_unmerged $line))
-        },
-        '?' => {
-          $status.UntrackedChanges = ($status.UntrackedChanges | append (parse_untracked $line))
-        },
-        '!' => {
-          $status.IgnoredChanges = ($status.IgnoredChanges | append (parse_ignored $line))
-        },
-      }
+    }
+
+    # TODO: MAYBE refactor
+    # put XY's in seperate tables instead
+    # Make decision from first two colmns [1: type, 2: [staging, worktree]]
+    # WorktreeChanges = [
+    #     { type, ...}    
+    #     ...
+    # ]
+    # StagingChanges = [
+    #     { type, ...}    
+    #     ...
+    # ]
+    # let type_ws = ($line | str substring 0..4 | split column ' ' type ws)
+    # print $type_ws.type
+    # print $type_ws.ws
+
+    let type = ($line | str substring 0..1)
+    match $type {
+      '1' => { 
+        $status.OrdinaryChanges = ($status.OrdinaryChanges | append (parse_ordinary $line))
+      },
+      '2' => {
+        # 2 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <X><score> <path><sep><origPath>
+        $status.RenameCopiesChanges = ($status.RenameCopiesChanges | append (parse_renameCopies $line))
+      },
+      'u' => {
+        # u <XY> <sub> <m1> <m2> <m3> <mW> <h1> <h2> <h3> <path>
+        $status.UnmergedChanges = ($status.UnmergedChanges | append (parse_unmerged $line))
+      },
+      '?' => {
+        $status.UntrackedChanges = ($status.UntrackedChanges | append (parse_untracked $line))
+      },
+      '!' => {
+        $status.IgnoredChanges = ($status.IgnoredChanges | append (parse_ignored $line))
+      },
     }
 
     $status    
@@ -104,9 +108,15 @@ def parse_porcelain [info_lines: list<string>] {
   return $parsed_status
 }
 
-export def git_status [] {
-  let raw_status = (do -i { git --no-optional-locks status --porcelain=2 --branch --show-stash | lines -s})
-  let parsed_status = parse_porcelain $raw_status
+export def "git porcelain" [
+  --branch
+  --show-stash
+] nothing -> table {
 
-  $parsed_status
+  let status = (do --env { git --no-optional-locks status --porcelain=2 --branch --show-stash } | complete)
+  if ($status.exit_code == 128) {
+    return
+  }
+
+  ($status.stdout | parse_porcelain)
 }
