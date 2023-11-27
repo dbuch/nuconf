@@ -38,21 +38,27 @@ export-env { load-env {
   HOSTNAME:  (hostname | split row '.' | first | str trim)
   SHOW_USER: true
   SSH_AUTH_SOCK: $"($env.XDG_RUNTIME_DIR)/ssh-agent.socket"
+  SSH_AGENT_TIMEOUT: 300
+  SSH_KEYS_HOME: ($env.HOME | path join ".ssh" "keys")
 }}
-
 
 export-env { load-env {
   SQLITE_HISTORY: ($env.XDG_CACHE_HOME | path join "sqlite_history")
 }}
 
+$env.TERMINFO_DIRS = (
+  [
+    ($env.XDG_DATA_HOME | path join 'terminfo')
+    "/usr/share/terminfo"
+  ] | str join ':'
+)
+
 $env.PATH = ($env.PATH | split row (char esep) | prepend '~/.cargo/bin/' | prepend '~/.local/bin/')
 
-# Directories to search for scripts when calling source or use
 $env.NU_LIB_DIRS = [
     ($nu.default-config-dir)
-    ($nu.default-config-dir | path join 'scripts')
-    ($nu.default-config-dir | path join 'modules')
-    ($nu.default-config-dir | path join 'hooks')
+    ($nu.default-config-dir | path join "scripts")
+    ($nu.default-config-dir | path join "modules")
 ]
 
 $env.SHELL = $nu.current-exe
