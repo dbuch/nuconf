@@ -1,6 +1,8 @@
-source init.nu
+# source init.nu
 
 use prompt.nu pre_prompt_hook
+use prompt.nu create_left_prompt
+use prompt.nu create_right_prompt
 
 $env.config = ($env.config? | default {} | merge {
   show_banner: false
@@ -20,7 +22,7 @@ $env.config = ($env.config? | default {} | merge {
   }
 
   history: {
-    file_format: "sqlite" # "sqlite" or "plaintext"
+    file_format: "sqlite"
   }
 
   completions: {
@@ -31,154 +33,42 @@ $env.config = ($env.config? | default {} | merge {
     format: "auto"
   }
   cursor_shape: {
-    vi_insert: line # block, underscore, line (block is the default)
-    vi_normal: block # block, underscore, line  (underscore is the default)
+    vi_insert: line 
+    vi_normal: block
   }
-  color_config: (source theme.nu) # if you want a light theme, replace `$dark_theme` to `$light_theme`
+  color_config: (source theme.nu)
   footer_mode: "25"
   edit_mode: vi
   menus: [
-      # Configuration for default nushell menus
-      # Note the lack of souce parameter
-      {
-        name: completion_menu
-        only_buffer_difference: false
-        marker: " | "
-        type: {
-            layout: columnar
-            columns: 4
-            col_width: 20   # Optional value. If missing all the screen width is used to calculate column width
-            col_padding: 2
-        }
-        style: {
-            text: green
-            selected_text: green_reverse
-            description_text: yellow
-        }
+    {
+      name: bookmarks_menu
+      only_buffer_difference: true
+      marker: " ? "
+      type: {
+          layout: list
+          page_size: 10
       }
-      {
-        name: history_menu
-        only_buffer_difference: true
-        marker: " ? "
-        type: {
-            layout: list
-            page_size: 10
-        }
-        style: {
-            text: green
-            selected_text: green_reverse
-            description_text: yellow
-        }
+      style: {
+          text: green
+          selected_text: green_reverse
+          description_text: yellow
       }
-      {
-        name: bookmarks_menu
-        only_buffer_difference: true
-        marker: " ? "
-        type: {
-            layout: list
-            page_size: 10
-        }
-        style: {
-            text: green
-            selected_text: green_reverse
-            description_text: yellow
-        }
-        source: { |buffer, position|
-            open "/home/dbuch/.bookmarks"
-            | lines |
-            each { |bm| { value: ($bm | str trim)}}
+      source: { |buffer, position|
+          open "/home/dbuch/.bookmarks"
+          | lines |
+          each { |bm| { value: ($bm | str trim)}}
 
-        }
       }
-      {
-        name: help_menu
-        only_buffer_difference: true
-        marker: " ? "
-        type: {
-            layout: description
-            columns: 4
-            col_width: 20   # Optional value. If missing all the screen width is used to calculate column width
-            col_padding: 2
-            selection_rows: 4
-            description_rows: 10
-        }
-        style: {
-            text: green
-            selected_text: green_reverse
-            description_text: yellow
-        }
-      }
-      {
-        name: commands_menu
-        only_buffer_difference: false
-        marker: " # "
-        type: {
-            layout: columnar
-            columns: 4
-            col_width: 20
-            col_padding: 2
-        }
-        style: {
-            text: green
-            selected_text: green_reverse
-            description_text: yellow
-        }
-        source: { |buffer, position|
-            $nu.scope.commands
-            | where name =~ $buffer
-            | each { |it| {value: $it.name description: $it.usage} }
-        }
-      }
-      {
-        name: vars_menu
-        only_buffer_difference: true
-        marker: " # "
-        type: {
-            layout: list
-            page_size: 10
-        }
-        style: {
-            text: green
-            selected_text: green_reverse
-            description_text: yellow
-        }
-        source: { |buffer, position|
-            $nu.scope.vars
-            | where name =~ $buffer
-            | sort-by name
-            | each { |it| {value: $it.name description: $it.type} }
-        }
-      }
-      {
-        name: commands_with_description
-        only_buffer_difference: true
-        marker: " # "
-        type: {
-            layout: description
-            columns: 4
-            col_width: 20
-            col_padding: 2
-            selection_rows: 4
-            description_rows: 10
-        }
-        style: {
-            text: green
-            selected_text: green_reverse
-            description_text: yellow
-        }
-        source: { |buffer, position|
-            $nu.scope.commands
-            | where name =~ $buffer
-            | each { |it| {value: $it.name description: $it.usage} }
-        }
-      }
+    }
   ]
-  keybindings: [
+})
+
+$env.config.keybindings = [
     {
       name: completion_menu
       modifier: Alt
       keycode: char_l
-      mode: [vi_normal, vi_insert] # Options: emacs vi_normal vi_insert
+      mode: [vi_normal, vi_insert]
       event: {
         until: [
           { send: menu name: completion_menu }
@@ -237,7 +127,7 @@ $env.config = ($env.config? | default {} | merge {
       name: unix-line-discard
       modifier: control
       keycode: char_u
-      mode: [emacs, vi_normal, vi_insert]
+      mode: [vi_normal, vi_insert]
       event: {
         until: [
           {edit: cutfromlinestart}
@@ -248,19 +138,18 @@ $env.config = ($env.config? | default {} | merge {
       name: kill-line
       modifier: control
       keycode: char_k
-      mode: [emacs, vi_normal, vi_insert]
+      mode: [vi_normal, vi_insert]
       event: {
         until: [
           {edit: cuttolineend}
         ]
       }
     }
-    # Keybindings used to trigger the user defined menus
     {
       name: commands_menu
       modifier: control
       keycode: char_t
-      mode: [emacs, vi_normal, vi_insert]
+      mode: [vi_normal, vi_insert]
       event: { send: menu name: commands_menu }
     }
     {
@@ -274,21 +163,52 @@ $env.config = ($env.config? | default {} | merge {
       name: vars_menu
       modifier: alt
       keycode: char_o
-      mode: [emacs, vi_normal, vi_insert]
+      mode: [vi_normal, vi_insert]
       event: { send: menu name: vars_menu }
     }
     {
       name: commands_with_description
       modifier: control
       keycode: char_s
-      mode: [emacs, vi_normal, vi_insert]
+      mode: [vi_normal, vi_insert]
       event: { send: menu name: commands_with_description }
     }
+    {
+        name: exit
+        modifier: none
+        keycode: char_q
+        mode: [vi_normal]
+        event: {
+            send: executehostcommand
+            cmd: "exit"
+        }
+    }
+    {
+        name: insert_newline
+        modifier: alt
+        keycode: enter
+        mode: [emacs vi_normal vi_insert]
+        event: { edit: insertnewline }
+    }
   ]
-})
+
+# Use nushell functions to define your right and left prompt
+$env.PROMPT_COMMAND = {|| create_left_prompt }
+$env.PROMPT_COMMAND_RIGHT = {|| create_right_prompt }
+
+# The prompt indicators are environmental variables that represent
+# the state of the prompt
+$env.PROMPT_INDICATOR = {|| " ❯ " }
+$env.PROMPT_INDICATOR_VI_INSERT = {|| " ❯ " }
+$env.PROMPT_INDICATOR_VI_NORMAL = {|| " ❮ " }
+$env.PROMPT_MULTILINE_INDICATOR = {|| "::: " }
 
 source ($nu.default-config-dir | path join "aliases.nu")
 source ($nu.default-config-dir | path join "completion.nu")
 source ($nu.default-config-dir | path join "hooks.nu")
 source ($nu.default-config-dir | path join "keybindings.nu")
 source ($nu.default-config-dir | path join "menus.nu")
+
+export def la [path?: string = ""] {
+  ls -l $path | sort-by type | select mode name size modified
+}
