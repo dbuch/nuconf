@@ -7,6 +7,10 @@ $env.config.hooks = {
   }]
   env_change: {
     PWD: [
+      {
+          condition: {|_, after| $after | path join 'toolkit.nu' | path exists }
+          code: "overlay use --prefix toolkit.nu as tk"
+      },
     ]
   }
   display_output: {||

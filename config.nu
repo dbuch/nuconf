@@ -32,6 +32,7 @@ $env.config = ($env.config? | default {} | merge {
     metric: true
     format: "auto"
   }
+  bracketed_paste: true
   cursor_shape: {
     vi_insert: line 
     vi_normal: block
