@@ -19,6 +19,12 @@ export-env {
 
 }
 
+# Directory | linux           | mac                            |  windows
+# Config    | ~/.config/      | ~/Library/Application/         | %APPDATA%
+# Cache     | ~/.cache/       | ~/Library/Caches/              | %LOCALAPPDATA
+# Data      | ~/.local/share/ | ~/Library/Application Support/ | %APPDATA%
+# Runtime   | /run/user/$UID  | /var/folders                   | %TEMP%
+
 export-env { load-env {
   XDG_DATA_HOME: ($env.HOME | path join ".local" "share")
   XDG_CONFIG_HOME: ($env.HOME | path join ".config")
