@@ -31,6 +31,7 @@ $env.config = ($env.config? | default {} | merge {
     format: "auto"
   }
   bracketed_paste: true
+  use_kitty_protocol: true
   cursor_shape: {
     vi_insert: line 
     vi_normal: block
