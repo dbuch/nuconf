@@ -35,7 +35,7 @@ export-env { load-env {
 export-env { load-env {
   BROWSER: "firefox"
   DEBUGINFOD_URLS: "https://debuginfod.archlinux.org/"
-  CARGO_TARGET_DIR: "~/.cargo/target"
+  CARGO_TARGET_DIR: ($env.XDG_CACHE_HOME | path join "cargo-build-targets")
   MOZ_ENABLE_WAYLAND: 1
   EDITOR: "nvim"
   VISUAL: "nvim"
