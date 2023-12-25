@@ -59,7 +59,14 @@ $env.TERMINFO_DIRS = (
   ] | str join ':'
 )
 
-$env.PATH = ($env.PATH | split row (char esep) | prepend '~/.cargo/bin/' | prepend '~/.local/bin/')
+let $path_list = $env.PATH | split row (char esep)
+if ($path_list | any {|$p| ($p == ($env.HOME | path join ".cargo" "bin"))}) == false {
+  $env.PATH = ($env.PATH | split row (char esep) | prepend '~/.cargo/bin/')
+}
+
+if ($path_list | any {|$p| ($p == ($env.HOME | path join ".local" "bin"))}) == false {
+  $env.PATH = ($env.PATH | split row (char esep) | prepend '~/.local/bin/')
+}
 
 $env.NU_LIB_DIRS = [
     ($nu.default-config-dir)

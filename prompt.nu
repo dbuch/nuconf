@@ -1,9 +1,17 @@
+export-env {
+  $env.GIT.TOPLEVEL = ""
+}
+
 def nope [] {
   each { |it| $it == false }
 }
 
 def repo_structured [] {
-  let in_git_repo = (pwd_is_git)
+  if ($env.GIT.TOPLEVEL | is-empty) {
+    return
+  }
+
+  let in_git_repo = true
 
   let status = (if $in_git_repo {
     git --no-optional-locks status --porcelain=2 --branch | lines
@@ -297,11 +305,11 @@ def unresolved-conflicts [
 }
 
 def repo-styled [] {
-  let status = ($env.GIT_STATUS)
-  if $status.is_git == false {
+  if ($env.GIT.TOPLEVEL | is-empty) {
     return ''
   }
 
+  let status = (repo_structured)
   let is_local_only = ($status.tracking_upstream_branch != true)
 
   let upstream_deleted = (
@@ -443,18 +451,20 @@ export def create_left_prompt [] {
 }
 
 export def create_right_prompt [] {
-  if $env.GIT_STATUS.is_git {
-    (repo-styled)
+  if ($env.GIT.TOPLEVEL | is-empty) {
+    return
   }
+
+  (repo-styled)
 }
 
 export def pre_prompt_hook [] {
   { ||
-    $env.GIT_STATUS = (repo_structured)
+    $env.GIT.TOPLEVEL = (pwd_is_git)
   }
 }
 
-def pwd_is_git [] {
-  let repo_toplevel = (do -i { ^git rev-parse --show-toplevel })
-  ($repo_toplevel | is-empty | nope)
+def pwd_is_git [] nothing -> string {
+  let repo_toplevel = (do -i { ^git rev-parse --show-toplevel } | complete)
+  $repo_toplevel.stdout
 }
