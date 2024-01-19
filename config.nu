@@ -1,6 +1,3 @@
-source "aliases.nu"
-source "completion.nu"
-
 use prompt.nu pre_prompt_hook
 use prompt.nu create_left_prompt
 use prompt.nu create_right_prompt
@@ -57,3 +54,6 @@ source "hooks.nu"
 export def la [path?: string = ""] {
   ls -l $path | sort-by type | select mode name size modified
 }
+
+source "completion.nu"
+source "aliases.nu"
