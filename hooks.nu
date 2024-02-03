@@ -1,4 +1,4 @@
-$env.config.hooks = {
+{
   pre_prompt: [
     (pre_prompt_hook)
   ]

@@ -12,6 +12,19 @@
     }
   }
   {
+      name: ide_completion_menu
+      modifier: control
+      keycode: char_n
+      mode: [emacs vi_normal vi_insert]
+      event: {
+          until: [
+              { send: menu name: ide_completion_menu }
+              { send: menunext }
+              { edit: complete }
+          ]
+      }
+  }
+  {
     name: completion_previous
     modifier: Alt
     keycode: char_h
