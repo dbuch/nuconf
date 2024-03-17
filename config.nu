@@ -23,6 +23,7 @@ $env.config = ($env.config? | default {} | merge {
   }
   completions: {
     case_sensitive: true,
+    use_ls_colors: true,
   }
   filesize: {
     metric: true
